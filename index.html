@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="./util/dot.js"></script>
     <script src="./util/jquery.js"></script>
-    <script src="./util/functions.js"></script>
+    <link rel="icon" href="./favicon.ico">
     <title>jq_todoList</title>
 </head>
 <body>
@@ -16,9 +16,23 @@
     <main>
         <div class="warp">
             <input class="input" type="text" placeholder="接下来做什么">
-            <ul></ul>
+            <ul>
+                <script id="tplList" type="text/x-dot-template">
+                    {{~it:value}}
+                    <li>
+                        <div onclick="solveTodo()" class="checkbox"></div>
+                        <div class="todo">{{= value }}</div>
+                        <div onclick="removeTodo()" class="close">×</div>
+                    </li>
+                    {{~}}
+                    </script>
+            </ul>
             <div class="footer">
-                <div class="count">0 items left</div>
+                <div class="count">
+                    <script id="tplCount" type="text/x-dot-template">
+                        {{=it.length}} items left
+                    </script>
+                </div>
                 <div class="btns">
                     <div class="active btn btn1" onclick="selectBtn(1)">all</div>
                     <div class="btn btn2" onclick="selectBtn(2)">active</div>
@@ -34,8 +48,25 @@
 </body>
 </html>
 <script>
-    $(function(){ 
-        console.log('dom初始化完毕');
+    var all = []
+    var active = []
+    function renderCount() {
+        let count = doT.template($('#tplCount').text());
+        $('.count').html(count(active));
+    }
+    function renderList() {
+        //test
+        active.push(0)
+        active.push(1)
+        active.push(2)
+        active.push(3)
+        active.push(4)
+
+        let list = doT.template($('#tplList').text());
+        $('ul').html(list(active));
+    }
+    $(function(){
+        renderList()
     })
 </script>
 <style>
