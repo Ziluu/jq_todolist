@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -9,6 +10,7 @@
     <link rel="icon" href="./favicon.ico">
     <title>jq_todoList</title>
 </head>
+
 <body>
     <header>
         <h1 class="logo">Todo</h1>
@@ -16,29 +18,28 @@
     <main>
         <div class="warp">
             <input class="input" type="text" placeholder="接下来做什么">
-            <ul>
-                <script id="tplList" type="text/x-dot-template">
-                    {{~it:value}}
-                    <li>
-                        <div onclick="solveTodo()" class="checkbox"></div>
-                        <div class="todo">{{= value }}</div>
-                        <div onclick="removeTodo()" class="close">×</div>
-                    </li>
-                    {{~}}
-                    </script>
-            </ul>
+            <ul></ul>
+            <script id="tplList" type="text/x-dot-template">
+                {{~it:value:index}}
+                <li class="{{= value.solve && 'selected ' || ''}}{{= value.show && 'show' || ''}}">
+                    <div onclick="solveTodo({{= index }})" class="checkbox"></div>
+                    <div class="todo">{{= value.text }}</div>
+                    <div onclick="removeTodo({{= index }})" class="close">×</div>
+                </li>
+                {{~}}
+            </script>
             <div class="footer">
-                <div class="count">
-                    <script id="tplCount" type="text/x-dot-template">
-                        {{=it.length}} items left
-                    </script>
-                </div>
-                <div class="btns">
-                    <div class="active btn btn1" onclick="selectBtn(1)">all</div>
-                    <div class="btn btn2" onclick="selectBtn(2)">active</div>
-                    <div class="btn btn3" onclick="selectBtn(3)">completed</div>
-                </div>
-                <div class="btn4" onclick="selectBtn(4)">Clear Completed</div>
+                <div class="count"></div>
+                <script id="tplCount" type="text/x-dot-template">
+                    {{=it}} items left
+                </script>
+                <div class="btns"></div>
+                <script id="tplBtn" type="text/x-dot-template">
+                    <div class="btn btn1 {{= it===1 && 'active' || ''}}" onclick="renderList(1)">all</div>
+                    <div class="btn btn2 {{= it===2 && 'active' || ''}}" onclick="renderList(2)">active</div>
+                    <div class="btn btn3 {{= it===3 && 'active' || ''}}" onclick="renderList(3)">completed</div>
+                </script>
+                <div class="btn4" onclick="renderList(4)">Clear Completed</div>
             </div>
         </div>
     </main>
@@ -46,27 +47,75 @@
         <div>Written by Zilu</div>
     </footer>
 </body>
+
 </html>
 <script>
     var all = []
-    var active = []
+    var state = 1
+    /* 渲染相关 */
     function renderCount() {
         let count = doT.template($('#tplCount').text());
-        $('.count').html(count(active));
+        let num = all.filter(todo => todo.show === true).length
+        $('.count').html(count(num));
     }
-    function renderList() {
-        //test
-        active.push(0)
-        active.push(1)
-        active.push(2)
-        active.push(3)
-        active.push(4)
-
+    function renderList(type) {
+        selectBtn(type)
         let list = doT.template($('#tplList').text());
-        $('ul').html(list(active));
+        $('ul').html(list(all));
+        renderCount()
     }
-    $(function(){
-        renderList()
+    //渲染数据重组格式
+    function getText(text) {
+        return { text: text, solve: false, show: true }
+    }
+    //新增Todo
+    function addTodo(text) {
+        all.push(getText(text))
+        renderList(state)
+    }
+    //移除Todo
+    function removeTodo(index) {
+        all.splice(index, 1)
+        renderList(state)
+    }
+    //改变Todo状态
+    function solveTodo(index) {
+        all[index].solve = !all[index].solve
+        renderList(state)
+    }
+    //改变列表状态
+    function selectBtn(type) {
+        switch (type) {
+            case 1: //all
+                all.forEach(todo => todo.show = true)
+                break;
+            case 2: //active
+                all.forEach(todo => !todo.solve ? todo.show = true : todo.show = false)
+                break;
+            case 3: //completed
+                all.forEach(todo => todo.solve ? todo.show = true : todo.show = false)
+                break;
+            case 4: //Clear Completed
+                all = all.filter(todo => todo.solve === false)
+                break;
+        }
+        state = type !== 4 ? type : state
+        let btn = doT.template($('#tplBtn').text());
+        $('.btns').html(btn(state));
+    }
+    //改变列表状态
+    function addEvent() {
+        $('input').on('keydown', () => {
+            let value = event.target.value
+            if (event.keyCode === 13 && value) {
+                addTodo(value)
+                event.target.value = ''
+            }
+        })
+    }
+    $(function () {
+        renderList(state)
+        addEvent()
     })
 </script>
 <style>
@@ -81,6 +130,7 @@
         height: 100%;
         margin: 0 auto;
     }
+
 
     /* header */
     header .logo {
@@ -107,11 +157,15 @@
     }
 
     main li {
-        display: flex;
+        display: none;
         align-items: center;
         justify-content: space-between;
         padding: 16px 16px 16px 36px;
         box-shadow: inset 0 -2px 1px rgb(0 0 0 / 3%);
+    }
+
+    main ul .show {
+        display: flex;
     }
 
     main li:hover .close {
@@ -129,6 +183,7 @@
         text-decoration: line-through;
         opacity: 0.3;
     }
+
     main .selected .checkbox {
         background-color: pink;
     }
