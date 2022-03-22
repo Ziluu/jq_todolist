@@ -103,7 +103,7 @@
         let btn = doT.template($('#tplBtn').text());
         $('.btns').html(btn(state));
     }
-    //改变列表状态
+    //输入框绑定事件
     function addEvent() {
         $('input').on('keydown', () => {
             let value = event.target.value
